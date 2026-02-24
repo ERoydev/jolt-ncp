@@ -1,0 +1,3 @@
+cargo run --release -- --tx-hash 0x6e1bc6ddf551d927b44f345ee3dcd3b7a126d02f4eb88100f008595f850801a4 --network testnet
+
+cargo run --release -- --tx-hash 0x8e303e5bb591a69307f292a605e8780156c41eff978c200c307cde12f043c2d4 --network mainnet
