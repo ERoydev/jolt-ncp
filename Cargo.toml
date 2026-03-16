@@ -32,6 +32,7 @@ ckb-vm-syscall-tracer = "1.0.0"
 ckb-mock-tx-types = "1.0.0"
 ckb-chain-spec = "1.0.2"
 ckb-hash = "1.0.1"
+ckb-vm = "0.24.14"
 
 [patch.crates-io]
 ark-ff = { git = "https://github.com/a16z/arkworks-algebra", branch = "dev/twist-shout" }
@@ -40,3 +41,4 @@ jolt-optimizations = { git = "https://github.com/a16z/arkworks-algebra", branch 
 ark-serialize = { git = "https://github.com/a16z/arkworks-algebra", branch = "dev/twist-shout" }
 ark-bn254 = { git = "https://github.com/a16z/arkworks-algebra", branch = "dev/twist-shout" }
 allocative = { git = "https://github.com/facebookexperimental/allocative", rev = "85b773d85d526d068ce94724ff7a7b81203fc95e" }
+ckb-vm = { git = "https://github.com/LimeChain/ckb-vm", branch="asm_feature_v0.24.14"}

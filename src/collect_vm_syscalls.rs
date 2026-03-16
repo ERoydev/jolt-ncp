@@ -1,10 +1,10 @@
 use std::sync::Arc;
 
 use ckb_mock_tx_types::Resource;
-use ckb_script::{ScriptGroup, TransactionScriptsVerifier, types::Machine};
+use ckb_script::{types::Machine, ScriptGroup, TransactionScriptsVerifier};
 use ckb_vm_syscall_tracer::{
-    BinaryLocator, BinaryLocatorCollector, Collector, CollectorResult, SyscallBasedCollector,
-    generated::traces::Syscalls,
+    generated::traces::Syscalls, BinaryLocator, BinaryLocatorCollector, Collector, CollectorResult,
+    SyscallBasedCollector,
 };
 
 use crate::collect_vm_creation::HumanReadableCycles;

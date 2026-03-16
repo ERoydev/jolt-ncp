@@ -1,4 +1,3 @@
-
 #[derive(Debug, Clone)]
 pub struct HostConfig {
     pub network: String,

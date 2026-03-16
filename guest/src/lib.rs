@@ -1,4 +1,8 @@
+use jolt::{end_cycle_tracking, println, start_cycle_tracking};
 use serde::{Deserialize, Serialize};
+mod exec_syscall_handler;
+mod executor;
+mod jolt_memory;
 
 /// Transaction proof context sent from host
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -18,10 +22,30 @@ pub struct ScriptGroupTraces {
     pub machine_program_elf_index: u16,
 }
 
-#[jolt::provable(max_input_size = 2097152, stack_size = 1048576, heap_size = 268435456, max_trace_length = 67108864)]
-fn entrypoint(tx_context: TransactionProofContext) {
+#[derive(Serialize, Deserialize, Debug)]
+pub struct GuestOutput {
+    pub transaction_hash: [u8; 32],
+}
+
+#[jolt::provable(max_input_size = 2_000_000, max_trace_length = 67_108_864)]
+fn entrypoint(tx_context: TransactionProofContext) -> GuestOutput {
     // tx_context is automatically deserialized by Jolt using postcard
-    let _tx_len = tx_context.raw_transaction_bytes.len();
-    let _traces_count = tx_context.vm_traces.len();
-    let _elfs_count = tx_context.machine_program_elfs.len();
+    start_cycle_tracking("ckb-vm replay");
+
+    tx_context.vm_traces.iter().for_each(|trace| {
+        executor::VmExecutor::new(
+            &trace.machine_trace_data,
+            &tx_context.machine_program_elfs[trace.machine_program_elf_index as usize],
+            trace.script_version,
+        )
+        .execute()
+    });
+
+    // TODO: replace with ckb_hash::blake2b_256 once the crate is added to guest deps
+    // let transaction_hash = [0u8; 32];
+    let tx_hash = ckb_hash::blake2b_256(&tx_context.raw_transaction_bytes);
+    end_cycle_tracking("ckb-vm replay");
+    GuestOutput {
+        transaction_hash: tx_hash,
+    }
 }

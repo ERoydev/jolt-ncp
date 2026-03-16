@@ -1,9 +1,9 @@
+use crate::types::error::{HostError, Result};
 use ckb_mock_tx_types::{MockCellDep, MockInfo, MockInput, MockTransaction};
 use ckb_types::bytes::Bytes;
 use ckb_types::core::{DepType, HeaderView};
 use ckb_types::packed::{OutPoint, OutPointVec, Transaction};
 use ckb_types::prelude::*;
-use crate::types::error::{HostError, Result};
 
 use crate::rpc_client::{RpcCall, RpcClient};
 
@@ -36,7 +36,11 @@ pub fn tx_to_mock_tx(rpc_client: &RpcClient, tx: &Transaction) -> Result<MockTra
     let n_inputs = if is_cellbase { 0 } else { view.inputs().len() };
     let n_cell_deps = view.cell_deps().len();
     let mut cell_calls: Vec<
-        RpcCall<(ckb_types::packed::CellOutput, Bytes, Option<ckb_types::packed::Byte32>)>,
+        RpcCall<(
+            ckb_types::packed::CellOutput,
+            Bytes,
+            Option<ckb_types::packed::Byte32>,
+        )>,
     > = Vec::with_capacity(n_inputs + n_cell_deps);
     // no need to resolve inputs for cellbase transactions
     if !is_cellbase {
@@ -47,7 +51,10 @@ pub fn tx_to_mock_tx(rpc_client: &RpcClient, tx: &Transaction) -> Result<MockTra
     for cell_dep in view.cell_deps_iter() {
         cell_calls.push(rpc_client.get_cell_by_out_point(&cell_dep.out_point()));
     }
-    println!("Resolving {} cells (inputs + cell deps)...", cell_calls.len());
+    println!(
+        "Resolving {} cells (inputs + cell deps)...",
+        cell_calls.len()
+    );
     let cell_results = rpc_client
         .exec_batch(cell_calls)
         .map_err(|e| HostError::CellResolutionError(format!("Failed to resolve cells: {}", e)))?;
@@ -69,7 +76,11 @@ pub fn tx_to_mock_tx(rpc_client: &RpcClient, tx: &Transaction) -> Result<MockTra
     // Build cell_deps: main results start at index n_inputs; handle DepGroup by batching sub out_points
     let main_results = &cell_results[n_inputs..];
     let mut sub_calls: Vec<
-        RpcCall<(ckb_types::packed::CellOutput, Bytes, Option<ckb_types::packed::Byte32>)>,
+        RpcCall<(
+            ckb_types::packed::CellOutput,
+            Bytes,
+            Option<ckb_types::packed::Byte32>,
+        )>,
     > = Vec::new();
     let mut sub_out_points_per_dep: Vec<Vec<ckb_types::packed::OutPoint>> =
         Vec::with_capacity(n_cell_deps);
@@ -144,11 +155,15 @@ pub fn tx_to_mock_tx(rpc_client: &RpcClient, tx: &Transaction) -> Result<MockTra
     }
 
     // get header dependencies
-    let header_hashes: Vec<String> =
-        view.header_deps_iter().map(|h| format!("0x{:x}", h)).collect();
+    let header_hashes: Vec<String> = view
+        .header_deps_iter()
+        .map(|h| format!("0x{:x}", h))
+        .collect();
     if !header_hashes.is_empty() {
-        let header_calls: Vec<RpcCall<HeaderView>> =
-            header_hashes.iter().map(|h| rpc_client.get_header(h)).collect();
+        let header_calls: Vec<RpcCall<HeaderView>> = header_hashes
+            .iter()
+            .map(|h| rpc_client.get_header(h))
+            .collect();
         println!("Resolving header deps... {}", header_calls.len());
         let headers: Vec<HeaderView> = rpc_client
             .exec_batch(header_calls)
@@ -156,5 +171,8 @@ pub fn tx_to_mock_tx(rpc_client: &RpcClient, tx: &Transaction) -> Result<MockTra
         mock_info.header_deps = headers;
     }
 
-    Ok(MockTransaction { mock_info, tx: tx.clone() })
+    Ok(MockTransaction {
+        mock_info,
+        tx: tx.clone(),
+    })
 }

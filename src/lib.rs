@@ -2,13 +2,14 @@ mod cli;
 mod collect_vm_creation;
 mod collect_vm_syscalls;
 mod config;
-mod types;
 mod macros;
 mod rpc_client;
 mod tx_converter;
-mod vefier_context;
 mod type_id;
+mod types;
+mod vefier_context;
 
+use crate::types::error::{HostError, Result};
 use ckb_script::{ScriptGroup, ScriptGroupType, ScriptVersion};
 use ckb_types::bytes::Bytes;
 use ckb_types::packed::{Byte32, RawTransaction};
@@ -17,19 +18,16 @@ use ckb_vm_syscall_tracer::generated::traces::Syscalls;
 use ckb_vm_syscall_tracer::{BinaryLocator, CollectorKey, CollectorResult};
 use jolt_sdk::host::Program;
 use types::types::TransactionProofContext;
-use crate::types::error::{HostError, Result};
-
 
 use crate::collect_vm_syscalls::collect_vm_syscalls_for_group;
-use crate::rpc_client::{DEFAULT_RPC_TIMEOUT_SECONDS, RpcClient};
+use crate::rpc_client::{RpcClient, DEFAULT_RPC_TIMEOUT_SECONDS};
 use crate::tx_converter::tx_to_mock_tx;
 use crate::type_id::is_type_id_group;
 use crate::types::types::ScriptGroupTraces;
 use crate::vefier_context::VerifierGroupContext;
 
 pub use crate::cli::HostArgs;
-pub use crate::config::{HostConfig};
-
+pub use crate::config::HostConfig;
 
 pub struct HostExecutor {
     rpc_client: RpcClient,
@@ -48,8 +46,11 @@ impl HostExecutor {
     }
 
     pub fn run(&self, tx_hash: &str, program: Program) -> Result<()> {
-        let tx_hash =
-            if tx_hash.starts_with("0x") { tx_hash.to_string() } else { format!("0x{}", tx_hash) };
+        let tx_hash = if tx_hash.starts_with("0x") {
+            tx_hash.to_string()
+        } else {
+            format!("0x{}", tx_hash)
+        };
 
         let transaction = self
             .rpc_client
@@ -80,7 +81,8 @@ impl HostExecutor {
         let (verifier_base, groups) = VerifierGroupContext::from_mock_transaction_with_groups(
             &mock_transaction,
             ScriptVersion::V2,
-        ).unwrap();
+        )
+        .unwrap();
 
         let script_traces = self.accumulate_traces(&verifier_base, &groups)?;
 
@@ -89,21 +91,32 @@ impl HostExecutor {
         Ok(())
     }
 
-    fn execute(&self, raw_tx: &RawTransaction, script_traces: Vec<ScriptGroupTraces>, mut program: Program) {
+    fn execute(
+        &self,
+        raw_tx: &RawTransaction,
+        script_traces: Vec<ScriptGroupTraces>,
+        mut program: Program,
+    ) {
         let raw_encoded_tx: Vec<u8> = raw_tx.as_slice().to_vec();
 
         // Build TransactionProofContext (host type)
-        let proof_context = TransactionProofContext { transaction: raw_encoded_tx, vm_traces: script_traces };
-        
+        let proof_context = TransactionProofContext {
+            transaction: raw_encoded_tx,
+            vm_traces: script_traces,
+        };
+
         // Convert to guest type (Jolt handles serialization automatically)
-        let guest_context: guest::TransactionProofContext = guest::TransactionProofContext::from(&proof_context);
+        let guest_context: guest::TransactionProofContext =
+            guest::TransactionProofContext::from(&proof_context);
 
         // Preprocessing
         let shared_preprocessing = guest::preprocess_shared_entrypoint(&mut program);
-        let prover_preprocessing = guest::preprocess_prover_entrypoint(shared_preprocessing.clone());
+        let prover_preprocessing =
+            guest::preprocess_prover_entrypoint(shared_preprocessing.clone());
         let verifier_setup = prover_preprocessing.generators.to_verifier_setup();
-        let verifier_preprocessing = guest::preprocess_verifier_entrypoint(shared_preprocessing, verifier_setup);
-        
+        let verifier_preprocessing =
+            guest::preprocess_verifier_entrypoint(shared_preprocessing, verifier_setup);
+
         // Build prover and verifier
         let prove = guest::build_prover_entrypoint(program, prover_preprocessing);
         let verify = guest::build_verifier_entrypoint(verifier_preprocessing);
@@ -112,6 +125,7 @@ impl HostExecutor {
         println!("Starting proof generation...");
         let (output, proof, io_device) = prove(guest_context.clone());
         println!("Proof generated!");
+        println!("Output: {:?}", output);
 
         // Verify the proof
         // let is_valid = verify(guest_context, output, io_device.panic, proof);
@@ -165,7 +179,10 @@ impl HostExecutor {
                 .get_program_elf(&group.script)
                 .map_err(|_| HostError::ProgramElfNotFound)?;
 
-            let machine_collector_key = CollectorKey { vm_id: 0, generation_id: 0 };
+            let machine_collector_key = CollectorKey {
+                vm_id: 0,
+                generation_id: 0,
+            };
             let machine_trace_data =
                 match syscalls_collector_result.traces.get(&machine_collector_key) {
                     Some(data) => {
@@ -185,8 +202,15 @@ impl HostExecutor {
             collector_results.push(syscalls_collector_result);
         }
 
-        for (i, (st, result)) in script_traces.iter().zip(collector_results.iter()).enumerate() {
-            let root_key = CollectorKey { vm_id: 0, generation_id: 0 };
+        for (i, (st, result)) in script_traces
+            .iter()
+            .zip(collector_results.iter())
+            .enumerate()
+        {
+            let root_key = CollectorKey {
+                vm_id: 0,
+                generation_id: 0,
+            };
             let root_trace = result.traces.get(&root_key);
             println!(
                 "script {}: version={:?} type={:?} hash={:x} exit_code={} ckb_cycles={} root_trace_present={} total_vms={}",

@@ -1,0 +1,19 @@
+{
+  "feature": "ckb-jolt-memory-shim",
+  "flow": "quick",
+  "version": "next-2.0",
+  "created": "2026-03-15T00:00:00Z",
+  "lastUpdated": "2026-03-15T00:01:00Z",
+  "currentPhase": "complete",
+  "quickSpec": "docs/quick-ckb-jolt-memory-shim.md",
+  "currentStory": null,
+  "tooling": {
+    "language": "rust",
+    "buildTool": "cargo",
+    "formatter": "cargo fmt",
+    "linter": "cargo clippy",
+    "testRunner": "cargo test",
+    "buildCommand": "cargo build"
+  },
+  "metrics": {}
+}

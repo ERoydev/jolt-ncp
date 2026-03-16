@@ -1,12 +1,12 @@
 use std::collections::HashMap;
 
+use crate::types::ncp_types;
 use ckb_script::{ScriptGroupType, ScriptVersion};
 use ckb_types::{
     bytes::Bytes,
     packed::{Byte32, Header, Transaction},
     prelude::*,
 };
-use crate::types::ncp_types;
 
 #[derive(Clone, Debug)]
 pub struct HistoricalWitness {
@@ -26,15 +26,16 @@ pub struct TransactionProofContext {
 impl TransactionProofContext {
     /// Serialize to raw bytes for sending to SP1 guest using serde/bincode
     pub fn to_raw_bytes(&self) -> crate::types::error::Result<Vec<u8>> {
-        let raw_input: ncp_types::TransactionProofContext = ncp_types::TransactionProofContext::from(self);
-        
-        bincode::serialize(&raw_input)
-            .map_err(|e| crate::types::error::HostError::TransactionProofContextConversion(e.to_string()))
+        let raw_input: ncp_types::TransactionProofContext =
+            ncp_types::TransactionProofContext::from(self);
+
+        bincode::serialize(&raw_input).map_err(|e| {
+            crate::types::error::HostError::TransactionProofContextConversion(e.to_string())
+        })
     }
 }
 
 impl From<&TransactionProofContext> for ncp_types::TransactionProofContext {
-
     fn from(ctx: &TransactionProofContext) -> Self {
         let mut code_hash_to_index: HashMap<Byte32, u16> = HashMap::new();
         let mut machine_program_elfs: Vec<Bytes> = Vec::new();
@@ -52,8 +53,9 @@ impl From<&TransactionProofContext> for ncp_types::TransactionProofContext {
             .vm_traces
             .iter()
             .map(|t| {
-                let elf_index =
-                    code_hash_to_index.get(&t.code_hash).expect("Elf index should be obtained");
+                let elf_index = code_hash_to_index
+                    .get(&t.code_hash)
+                    .expect("Elf index should be obtained");
 
                 let version_u8 = match t.script_version {
                     ScriptVersion::V0 => 0u8,
@@ -80,7 +82,10 @@ impl From<&TransactionProofContext> for ncp_types::TransactionProofContext {
         ncp_types::TransactionProofContext {
             raw_transaction_bytes: ctx.transaction.clone(),
             vm_traces,
-            machine_program_elfs: machine_program_elfs.into_iter().map(|b| b.to_vec()).collect(),
+            machine_program_elfs: machine_program_elfs
+                .into_iter()
+                .map(|b| b.to_vec())
+                .collect(),
         }
     }
 }
@@ -103,8 +108,9 @@ impl From<&TransactionProofContext> for guest::TransactionProofContext {
             .vm_traces
             .iter()
             .map(|t| {
-                let elf_index =
-                    code_hash_to_index.get(&t.code_hash).expect("Elf index should be obtained");
+                let elf_index = code_hash_to_index
+                    .get(&t.code_hash)
+                    .expect("Elf index should be obtained");
 
                 let version_u8 = match t.script_version {
                     ScriptVersion::V0 => 0u8,
@@ -131,7 +137,10 @@ impl From<&TransactionProofContext> for guest::TransactionProofContext {
         guest::TransactionProofContext {
             raw_transaction_bytes: ctx.transaction.clone(),
             vm_traces,
-            machine_program_elfs: machine_program_elfs.into_iter().map(|b| b.to_vec()).collect(),
+            machine_program_elfs: machine_program_elfs
+                .into_iter()
+                .map(|b| b.to_vec())
+                .collect(),
         }
     }
 }

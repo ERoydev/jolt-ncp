@@ -3,15 +3,15 @@
 // ! arch needs to be imported from ckb-standalone-debugger or replaced with STD println! but this would break OS-compatibility.
 
 use ckb_vm_syscall_tracer::{
+    generated::traces::{VmCreation, VmCreations},
     BinaryLocator, BinaryLocatorCollector, Collector, CollectorKey, CollectorResult,
     VmCreateCollector,
-    generated::traces::{VmCreation, VmCreations},
 };
 
 use crate::types::error::Result;
 use std::{collections::HashMap, sync::Arc};
 
-use ckb_script::{ScriptGroup, TransactionScriptsVerifier, types::Machine};
+use ckb_script::{types::Machine, ScriptGroup, TransactionScriptsVerifier};
 
 use ckb_mock_tx_types::Resource;
 
@@ -131,9 +131,15 @@ fn print_vm_tree_recursive(
         let new_prefix = if prefix.is_empty() {
             "".to_string()
         } else if is_last {
-            format!("{}    ", prefix.trim_end_matches("├── ").trim_end_matches("└── "))
+            format!(
+                "{}    ",
+                prefix.trim_end_matches("├── ").trim_end_matches("└── ")
+            )
         } else {
-            format!("{}│   ", prefix.trim_end_matches("├── ").trim_end_matches("└── "))
+            format!(
+                "{}│   ",
+                prefix.trim_end_matches("├── ").trim_end_matches("└── ")
+            )
         };
         // Print each child
         for (i, child) in children.iter().enumerate() {
@@ -146,7 +152,10 @@ fn print_vm_tree_recursive(
             print_vm_tree_recursive(
                 tree,
                 hint,
-                CollectorKey { vm_id: child.vm_id, generation_id: child.generation_id },
+                CollectorKey {
+                    vm_id: child.vm_id,
+                    generation_id: child.generation_id,
+                },
                 &child_prefix,
                 is_last_child,
             )?;
@@ -190,7 +199,10 @@ pub fn print_vm_tree(
         print_vm_tree_recursive(
             &tree,
             &hint,
-            CollectorKey { vm_id: 0, generation_id: 0 },
+            CollectorKey {
+                vm_id: 0,
+                generation_id: 0,
+            },
             "",
             false,
         )?;

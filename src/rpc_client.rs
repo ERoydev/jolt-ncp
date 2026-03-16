@@ -34,7 +34,7 @@ use ckb_types::{
     prelude::Pack,
 };
 use reqwest::blocking::Client;
-use serde::{Deserialize, Serialize, de::DeserializeOwned};
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
 #[derive(Serialize)]
 struct JsonRpcRequest {
@@ -73,10 +73,13 @@ fn decode_transaction(
     if let Some(e) = body.error {
         return Err(e.message.into());
     }
-    let tws: TransactionWithStatusResponse =
-        serde_json::from_value(body.result.ok_or("RPC returned null (transaction not found)")?)?;
-    let tx_view =
-        tws.transaction.ok_or("transaction field is null (not found or verbosity too low)")?;
+    let tws: TransactionWithStatusResponse = serde_json::from_value(
+        body.result
+            .ok_or("RPC returned null (transaction not found)")?,
+    )?;
+    let tx_view = tws
+        .transaction
+        .ok_or("transaction field is null (not found or verbosity too low)")?;
     match &tx_view.inner {
         Either::Left(view) => Ok(view.inner.clone().into()),
         Either::Right(_) => Err("hex format not supported here; use verbosity 2".into()),
@@ -128,7 +131,11 @@ fn decode_block(
         BlockResponse::WithCycles(block_with_cycles_response) => {
             let block_response_format = block_with_cycles_response.block;
             let cycles_opt = block_with_cycles_response.cycles;
-            let cycles = cycles_opt.unwrap_or_default().into_iter().map(|c| c.into()).collect();
+            let cycles = cycles_opt
+                .unwrap_or_default()
+                .into_iter()
+                .map(|c| c.into())
+                .collect();
             match block_response_format.inner {
                 Either::Left(json_view) => Ok((json_view.clone().into(), cycles)),
                 Either::Right(_) => Err("hex format not supported here; use verbosity 2".into()),
@@ -148,13 +155,16 @@ fn decode_cell_by_out_point(
     if let Some(e) = body.error {
         return Err(e.message.into());
     }
-    let tws: TransactionWithStatusResponse =
-        serde_json::from_value(body.result.ok_or("RPC returned null (transaction not found)")?)?;
+    let tws: TransactionWithStatusResponse = serde_json::from_value(
+        body.result
+            .ok_or("RPC returned null (transaction not found)")?,
+    )?;
 
     let block_hash: Option<Byte32> = tws.tx_status.block_hash.map(|h| h.pack());
 
-    let tx_view =
-        tws.transaction.ok_or("transaction field is null (not found or verbosity too low)")?;
+    let tx_view = tws
+        .transaction
+        .ok_or("transaction field is null (not found or verbosity too low)")?;
     let tx: Transaction = match &tx_view.inner {
         Either::Left(view) => view.inner.clone().into(),
         Either::Right(_) => return Err("hex format not supported here; use verbosity 2".into()),
@@ -176,7 +186,11 @@ fn decode_cell_by_out_point(
 
 impl<T> RpcCall<T> {
     pub fn exec(self, client: &RpcClient) -> Result<T, Box<dyn std::error::Error + Send + Sync>> {
-        let res = client.client.post(&client.rpc_url).json(&self.request).send()?;
+        let res = client
+            .client
+            .post(&client.rpc_url)
+            .json(&self.request)
+            .send()?;
         let raw: JsonRpcResponse<serde_json::Value> = res.json()?;
         (self.decode)(raw, self.request.output_index)
     }
@@ -191,14 +205,22 @@ pub fn cell_from_tx(
     let tx_hash_hex = format!("0x{:x}", out_point.tx_hash());
     let raw = tx.raw();
     let index = ckb_types::prelude::Unpack::<u32>::unpack(&out_point.index()) as usize;
-    let output =
-        raw.outputs().into_iter().nth(index).ok_or_else(|| {
-            format!("output index {} out of bounds for tx {}", index, tx_hash_hex)
+    let output = raw.outputs().into_iter().nth(index).ok_or_else(|| {
+        format!(
+            "output index {} out of bounds for tx {}",
+            index, tx_hash_hex
+        )
+    })?;
+    let data = raw
+        .outputs_data()
+        .get(index)
+        .map(|b| Bytes::from(b.raw_data().to_vec()))
+        .ok_or_else(|| {
+            format!(
+                "outputs_data index {} out of bounds for tx {}",
+                index, tx_hash_hex
+            )
         })?;
-    let data =
-        raw.outputs_data().get(index).map(|b| Bytes::from(b.raw_data().to_vec())).ok_or_else(
-            || format!("outputs_data index {} out of bounds for tx {}", index, tx_hash_hex),
-        )?;
     Ok((output, data))
 }
 
@@ -224,8 +246,14 @@ impl RpcClient {
         timeout: u64,
     ) -> Result<Self, Box<dyn std::error::Error + Send + Sync>> {
         let rpc_url = format!("{}/", rpc_url.trim_end_matches('/')).to_string();
-        let client = Client::builder().timeout(Duration::from_secs(timeout)).build()?;
-        Ok(Self { client, rpc_url, next_id: AtomicU64::new(0) })
+        let client = Client::builder()
+            .timeout(Duration::from_secs(timeout))
+            .build()?;
+        Ok(Self {
+            client,
+            rpc_url,
+            next_id: AtomicU64::new(0),
+        })
     }
 
     pub fn exec_batch<T>(

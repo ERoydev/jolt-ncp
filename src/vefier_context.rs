@@ -5,21 +5,21 @@ use std::collections::HashSet;
 use std::rc::Rc;
 use std::sync::Arc;
 
+use crate::types::error::{HostError, Result};
 use ckb_chain_spec::consensus::{Consensus, ConsensusBuilder};
 use ckb_mock_tx_types::{MockTransaction, Resource};
-use ckb_script::Scheduler;
 use ckb_script::types::{Machine, SgData};
+use ckb_script::Scheduler;
 use ckb_script::{
     ScriptGroup, ScriptGroupType, ScriptVersion, TransactionScriptsVerifier, TxVerifyEnv,
 };
 use ckb_types::bytes::Bytes;
-use ckb_types::core::cell::ResolvedTransaction;
 use ckb_types::core::cell::resolve_transaction;
-use ckb_types::core::{HeaderView, ScriptHashType, hardfork};
+use ckb_types::core::cell::ResolvedTransaction;
+use ckb_types::core::{hardfork, HeaderView, ScriptHashType};
 use ckb_types::packed::{Byte32, OutPoint, Script};
 use ckb_types::prelude::Entity;
 use ckb_types::prelude::Pack;
-use crate::types::error::{HostError, Result};
 
 #[derive(Clone)]
 pub struct VerifierGroupContext {
@@ -70,23 +70,35 @@ impl VerifierGroupContext {
         }
 
         let verifier_hardforks = hardfork::HardForks {
-            ckb2021: hardfork::CKB2021::new_mirana().as_builder().rfc_0032(20).build().map_err(
-                |e| HostError::VerifierContextCreation(format!("CKB2021 build failed: {:?}", e)),
-            )?,
+            ckb2021: hardfork::CKB2021::new_mirana()
+                .as_builder()
+                .rfc_0032(20)
+                .build()
+                .map_err(|e| {
+                    HostError::VerifierContextCreation(format!("CKB2021 build failed: {:?}", e))
+                })?,
 
-            ckb2023: hardfork::CKB2023::new_mirana().as_builder().rfc_0049(30).build().map_err(
-                |e| HostError::VerifierContextCreation(format!("CKB2021 build failed: {:?}", e)),
-            )?,
+            ckb2023: hardfork::CKB2023::new_mirana()
+                .as_builder()
+                .rfc_0049(30)
+                .build()
+                .map_err(|e| {
+                    HostError::VerifierContextCreation(format!("CKB2021 build failed: {:?}", e))
+                })?,
         };
-        let verifier_consensus =
-            Arc::new(ConsensusBuilder::default().hardfork_switch(verifier_hardforks).build());
+        let verifier_consensus = Arc::new(
+            ConsensusBuilder::default()
+                .hardfork_switch(verifier_hardforks)
+                .build(),
+        );
         let verifier_epoch = match epoch_for_version_selection {
             ScriptVersion::V0 => ckb_types::core::EpochNumberWithFraction::new(15, 0, 1),
             ScriptVersion::V1 => ckb_types::core::EpochNumberWithFraction::new(25, 0, 1),
             ScriptVersion::V2 => ckb_types::core::EpochNumberWithFraction::new(35, 0, 1),
         };
-        let verifier_header_view =
-            HeaderView::new_advanced_builder().epoch(verifier_epoch.pack()).build();
+        let verifier_header_view = HeaderView::new_advanced_builder()
+            .epoch(verifier_epoch.pack())
+            .build();
         let verifier_tx_env = Arc::new(TxVerifyEnv::new_commit(&verifier_header_view));
 
         let verifier_resolve_transaction = Arc::new(verifier_resolve_transaction);
@@ -122,7 +134,10 @@ impl VerifierGroupContext {
     /// O(1) lookup instead of O(n) search with re-hashing.
     pub fn get_program_elf(&self, verifier_script: &Script) -> Result<Bytes> {
         let code_hash = verifier_script.code_hash();
-        self.cell_dep_data_hash_to_elf.get(&code_hash).cloned().ok_or(HostError::ProgramElfNotFound)
+        self.cell_dep_data_hash_to_elf
+            .get(&code_hash)
+            .cloned()
+            .ok_or(HostError::ProgramElfNotFound)
     }
 }
 
@@ -201,22 +216,34 @@ impl VerifierContext {
         };
 
         let verifier_hardforks = hardfork::HardForks {
-            ckb2021: hardfork::CKB2021::new_mirana().as_builder().rfc_0032(20).build().map_err(
-                |e| HostError::VerifierContextCreation(format!("CKB2021 build failed: {:?}", e)),
-            )?,
-            ckb2023: hardfork::CKB2023::new_mirana().as_builder().rfc_0049(30).build().map_err(
-                |e| HostError::VerifierContextCreation(format!("CKB2023 build failed: {:?}", e)),
-            )?,
+            ckb2021: hardfork::CKB2021::new_mirana()
+                .as_builder()
+                .rfc_0032(20)
+                .build()
+                .map_err(|e| {
+                    HostError::VerifierContextCreation(format!("CKB2021 build failed: {:?}", e))
+                })?,
+            ckb2023: hardfork::CKB2023::new_mirana()
+                .as_builder()
+                .rfc_0049(30)
+                .build()
+                .map_err(|e| {
+                    HostError::VerifierContextCreation(format!("CKB2023 build failed: {:?}", e))
+                })?,
         };
-        let verifier_consensus =
-            Arc::new(ConsensusBuilder::default().hardfork_switch(verifier_hardforks).build());
+        let verifier_consensus = Arc::new(
+            ConsensusBuilder::default()
+                .hardfork_switch(verifier_hardforks)
+                .build(),
+        );
         let verifier_epoch = match script_version {
             ScriptVersion::V0 => ckb_types::core::EpochNumberWithFraction::new(15, 0, 1),
             ScriptVersion::V1 => ckb_types::core::EpochNumberWithFraction::new(25, 0, 1),
             ScriptVersion::V2 => ckb_types::core::EpochNumberWithFraction::new(35, 0, 1),
         };
-        let verifier_header_view =
-            HeaderView::new_advanced_builder().epoch(verifier_epoch.pack()).build();
+        let verifier_header_view = HeaderView::new_advanced_builder()
+            .epoch(verifier_epoch.pack())
+            .build();
         let verifier_tx_env = Arc::new(TxVerifyEnv::new_commit(&verifier_header_view));
         let verifier = TransactionScriptsVerifier::new(
             Arc::new(verifier_resolve_transaction.clone()),

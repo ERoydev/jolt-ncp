@@ -2,7 +2,6 @@ use clap::Parser;
 use jolt_testing::{HostArgs, HostExecutor};
 use tracing::info;
 
-
 pub fn main() {
     tracing_subscriber::fmt::init();
 
@@ -26,7 +25,6 @@ pub fn main() {
         std::process::exit(1);
     }
 
-    
     // let mut program = guest::entrypoint(input_bytes);
 
     // let target_dir = "/tmp/jolt-guest-targets";

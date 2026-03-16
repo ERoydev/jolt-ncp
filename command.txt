@@ -1,3 +1,13 @@
+# Set required environment variables for cross-compilation
+export CC_riscv64imac_zero_linux_musl="$HOME/.zeroos/musl/bin/riscv64-linux-musl-gcc"
+export CFLAGS_riscv64imac_zero_linux_musl="-mcmodel=medany -mabi=lp64 -march=rv64imac"
+
 cargo run --release -- --tx-hash 0x6e1bc6ddf551d927b44f345ee3dcd3b7a126d02f4eb88100f008595f850801a4 --network testnet
 
 cargo run --release -- --tx-hash 0x8e303e5bb591a69307f292a605e8780156c41eff978c200c307cde12f043c2d4 --network mainnet
+
+
+CC_riscv64imac_zero_linux_musl="$HOME/.zeroos/musl/bin/riscv64-linux-musl-gcc" cargo run --release -- --tx-hash 0x8e303e5bb591a69307f292a605e8780156c41eff978c200c307cde12f043c2d4 --network mainnet 2>&1
+CC_riscv64imac_zero_linux_musl="$HOME/.zeroos/musl/bin/riscv64-linux-musl-gcc" CFLAGS_riscv64imac_zero_linux_musl="-mcmodel=medany -mabi=lp64 -march=rv64imac" cargo run --release -- --tx-hash 0x8e303e5bb591a69307f292a605e8780156c41eff978c200c307cde12f043c2d4 --network mainnet 2>&1
+
+

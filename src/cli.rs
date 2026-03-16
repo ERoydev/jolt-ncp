@@ -1,4 +1,3 @@
-
 use crate::config::HostConfig;
 use crate::rpc_client::{DEFAULT_RPC_URL_MAINNET, DEFAULT_RPC_URL_TESTNET};
 use clap::Parser;
@@ -25,7 +24,9 @@ impl HostArgs {
     }
 
     pub fn effective_rpc_url(&self) -> String {
-        self.rpc_url.clone().unwrap_or_else(|| Self::default_rpc_url_for_network(&self.network))
+        self.rpc_url
+            .clone()
+            .unwrap_or_else(|| Self::default_rpc_url_for_network(&self.network))
     }
 
     fn default_rpc_url_for_network(network: &str) -> String {

@@ -2,7 +2,6 @@
 
 use serde::{Deserialize, Serialize};
 
-
 // Define GuestOutput locally for deserialization (matches guest's types.rs)
 #[derive(Debug, Serialize, Deserialize)]
 pub struct GuestOutput {
