@@ -17,7 +17,8 @@ pub fn main() {
         std::process::exit(1);
     });
 
-    let target_dir = "/tmp/jolt-guest-targets";
+    // Invoke compiling guest at runtime and the output goes to `target_dir`, returns a program struct containing the compiled bytecode
+    let target_dir = "target/jolt-guest";
     let mut program = guest::compile_entrypoint(target_dir);
 
     if let Err(e) = executor.run(tx_hash, program) {
