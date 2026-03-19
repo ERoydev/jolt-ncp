@@ -65,13 +65,13 @@ fn entrypoint(tx_context: TransactionProofContext) -> GuestOutput {
     //     .execute()
     // });
 
-    // let trace = &tx_context.vm_traces[0];
-    // executor::VmExecutor::new(
-    //     &trace.machine_trace_data,
-    //     &tx_context.machine_program_elfs[trace.machine_program_elf_index as usize],
-    //     trace.script_version,
-    // )
-    // .execute();
+    let trace = &tx_context.vm_traces[0];
+    executor::VmExecutor::new(
+        &trace.machine_trace_data,
+        &tx_context.machine_program_elfs[trace.machine_program_elf_index as usize],
+        trace.script_version,
+    )
+    .execute();
 
     // TODO: replace with ckb_hash::blake2b_256 once the crate is added to guest deps
     let transaction_hash = [0u8; 32];
