@@ -49,7 +49,7 @@ Parameters i have set:
 
 #[jolt::provable(
     max_input_size = 1_200_000,
-    max_trace_length = 16_777_216, // 2^24
+    max_trace_length = 67_108_864, // 2^26
     stack_size = 65536
 )]
 fn entrypoint(tx_context: TransactionProofContext) -> GuestOutput {
