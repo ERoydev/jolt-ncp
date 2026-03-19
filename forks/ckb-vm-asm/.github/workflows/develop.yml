@@ -1,0 +1,108 @@
+name: develop
+
+on:
+  pull_request:
+  push:
+
+jobs:
+
+  linux-arm64:
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+      - name: Build
+        run: cargo test --features=asm --release
+
+  linux-x64:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+      - name: Build
+        run: cargo test --features=asm --release
+
+  macos-arm64:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+      - name: Build
+        run: cargo test --features=asm --release
+
+  macos-x64:
+    runs-on: macos-15-intel
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+      - name: Build
+        run: cargo test --features=asm --release
+
+  qemu-arm64:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup
+        run: |
+          sudo apt-get update -y
+          sudo apt install -y gcc-aarch64-linux-gnu \
+                              qemu-user-static
+          rustup target add aarch64-unknown-linux-gnu
+      - name: Build
+        run: |
+          export CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=aarch64-linux-gnu-gcc
+          export CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_RUSTFLAGS="-C link-args=-L -C link-args=/usr/lib/gcc-cross/aarch64-linux-gnu/13"
+          export CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_RUNNER="qemu-aarch64-static -L /usr/aarch64-linux-gnu"
+          cargo test --features=asm --release --target aarch64-unknown-linux-gnu
+
+  qemu-riscv64:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup
+        run: |
+          sudo apt-get update -y
+          sudo apt install -y gcc-riscv64-linux-gnu \
+                              qemu-user-static
+          rustup target add riscv64gc-unknown-linux-gnu
+      - name: Build
+        run: |
+          export CARGO_TARGET_RISCV64GC_UNKNOWN_LINUX_GNU_LINKER=riscv64-linux-gnu-gcc
+          export CARGO_TARGET_RISCV64GC_UNKNOWN_LINUX_GNU_RUSTFLAGS="-C link-args=-L -C link-args=/usr/lib/gcc-cross/riscv64-linux-gnu/13"
+          export CARGO_TARGET_RISCV64GC_UNKNOWN_LINUX_GNU_RUNNER="qemu-riscv64-static -L /usr/riscv64-linux-gnu"
+          cargo test --features=asm --release --target riscv64gc-unknown-linux-gnu
+
+  windows-x64:
+    runs-on: windows-2025
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup
+        shell: pwsh
+        # https://github.com/ScoopInstaller/Install#for-admin
+        run: |
+          iex "& {$(irm get.scoop.sh)} -RunAsAdmin"
+          scoop install mingw
+      - name: Build
+        shell: pwsh
+        run: cargo test --features=asm --release
+
+  misc:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v3
+      # https://github.com/EmbarkStudios/cargo-deny-action
+      - uses: EmbarkStudios/cargo-deny-action@v2
+        with:
+          arguments: --all-features
+          command: check advisories licenses sources bans
+      - name: Run ci-generated
+        run: make ci-generated
+      - name: Run clippy
+        run: |
+          rustup component add clippy
+          make clippy
+      - name: Run fuzz
+        run: |
+          sudo apt install device-tree-compiler
+          cargo install cargo-fuzz
+          cargo +nightly fuzz build
