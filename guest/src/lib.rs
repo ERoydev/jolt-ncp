@@ -52,7 +52,7 @@ Parameters i have set:
     max_trace_length = 67_108_864, // 2^26
     stack_size = 65536
 )]
-fn entrypoint(tx_context: TransactionProofContext) -> GuestOutput {
+fn entrypoint(tx_context: TransactionProofContext) {
     // tx_context is automatically deserialized by Jolt using postcard
     start_cycle_tracking("ckb-vm replay");
 
@@ -74,10 +74,10 @@ fn entrypoint(tx_context: TransactionProofContext) -> GuestOutput {
     .execute();
 
     // TODO: replace with ckb_hash::blake2b_256 once the crate is added to guest deps
-    let transaction_hash = [0u8; 32];
+    // let transaction_hash = [0u8; 32];
     // let tx_hash = ckb_hash::blake2b_256(&tx_context.raw_transaction_bytes);
     end_cycle_tracking("ckb-vm replay");
-    GuestOutput {
-        transaction_hash: transaction_hash,
-    }
+    // GuestOutput {
+    //     transaction_hash: transaction_hash,
+    // }
 }
