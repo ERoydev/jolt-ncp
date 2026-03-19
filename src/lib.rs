@@ -98,6 +98,7 @@ impl HostExecutor {
         mut program: Program,
     ) {
         let raw_encoded_tx: Vec<u8> = raw_tx.as_slice().to_vec();
+        println!("Raw encoded tx: {:?}", raw_encoded_tx);
 
         // Build TransactionProofContext (host type)
         let proof_context = TransactionProofContext {
@@ -108,6 +109,60 @@ impl HostExecutor {
         // Convert to guest type (Jolt handles serialization automatically)
         let guest_context: guest::TransactionProofContext =
             guest::TransactionProofContext::from(&proof_context);
+
+        // --- Input size analysis ---
+        println!("\n=== INPUT SIZE ANALYSIS ===");
+        println!(
+            "  raw_transaction_bytes: {} bytes ({:.2} KB)",
+            guest_context.raw_transaction_bytes.len(),
+            guest_context.raw_transaction_bytes.len() as f64 / 1024.0
+        );
+        println!("  script groups (vm_traces): {}", guest_context.vm_traces.len());
+        for (i, trace) in guest_context.vm_traces.iter().enumerate() {
+            println!(
+                "    trace[{}]: trace_data={} bytes ({:.2} KB), elf_index={}",
+                i,
+                trace.machine_trace_data.len(),
+                trace.machine_trace_data.len() as f64 / 1024.0,
+                trace.machine_program_elf_index
+            );
+        }
+        println!(
+            "  unique ELF binaries: {}",
+            guest_context.machine_program_elfs.len()
+        );
+        let mut total_elf_bytes = 0usize;
+        for (i, elf) in guest_context.machine_program_elfs.iter().enumerate() {
+            println!(
+                "    elf[{}]: {} bytes ({:.2} KB)",
+                i,
+                elf.len(),
+                elf.len() as f64 / 1024.0
+            );
+            total_elf_bytes += elf.len();
+        }
+        let total_trace_bytes: usize = guest_context
+            .vm_traces
+            .iter()
+            .map(|t| t.machine_trace_data.len())
+            .sum();
+        let total_input = guest_context.raw_transaction_bytes.len()
+            + total_trace_bytes
+            + total_elf_bytes;
+        println!(
+            "  TOTAL (approx): {} bytes ({:.2} KB / {:.2} MB)",
+            total_input,
+            total_input as f64 / 1024.0,
+            total_input as f64 / (1024.0 * 1024.0)
+        );
+        println!(
+            "  max_input_size configured: 2,000,000 bytes ({:.2} MB)",
+            2_000_000.0 / (1024.0 * 1024.0)
+        );
+        if total_input > 2_000_000 {
+            println!("  ⚠ INPUT EXCEEDS max_input_size! Jolt will panic.");
+        }
+        println!("===========================\n");
 
         // Preprocessing
         let shared_preprocessing = guest::preprocess_shared_entrypoint(&mut program);

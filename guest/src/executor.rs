@@ -1,10 +1,9 @@
+use std::u64;
+
 use crate::exec_syscall_handler::EXEC_OVERRIDE;
-use crate::jolt_memory::JoltMemory;
-use ckb_vm::{Bytes, CoreMachine, DefaultMachineBuilder, SupportMachine};
+use ckb_vm::{Bytes, CoreMachine, DefaultMachineBuilder, FlatMemory, SupportMachine};
 use ckb_vm_fuzzing_utils::SynchronousSyscalls;
 use protobuf_ckb_syscalls::ProtobufVmRunnerImpls;
-
-pub const VM_MAX_CYCLES: u64 = u64::MAX;
 
 pub struct VmExecutor {
     trace_data: Bytes,
@@ -36,29 +35,27 @@ impl VmExecutor {
             _ => panic!("Unsupported script version"),
         };
 
-        // Use JoltMemory (safe byte-level shim) instead of FlatMemory.
-        // JoltMemory redirects CKB-VM's 0-based addresses into a Vec<u8>
-        // that resides in Jolt's valid DRAM region.
-        let machine_core = ckb_vm::DefaultCoreMachine::<u64, ckb_vm::WXorXMemory<JoltMemory>>::new(
-            ckb_vm::ISA_IMC | ckb_vm::ISA_B | ckb_vm::ISA_MOP,
-            machine_version,
-            VM_MAX_CYCLES,
-        );
+        // let machine_core = ckb_vm::DefaultCoreMachine::<u64, ckb_vm::WXorXMemory<JoltMemory>>::new(
+        //     ckb_vm::ISA_IMC | ckb_vm::ISA_B | ckb_vm::ISA_MOP,
+        //     machine_version,
+        //     VM_MAX_CYCLES,
+        // );
 
-        let machine_builder = DefaultMachineBuilder::new(machine_core)
+        let machine_core =
+            ckb_vm::DefaultCoreMachine::<u64, ckb_vm::WXorXMemory<FlatMemory<u64>>>::new(
+                ckb_vm::ISA_IMC | ckb_vm::ISA_B | ckb_vm::ISA_MOP,
+                machine_version,
+                u64::MAX,
+            );
+
+        let mut machine = DefaultMachineBuilder::new(machine_core)
             .syscall(Box::new(EXEC_OVERRIDE))
-            .syscall(Box::new(machine_syscall));
-
-        let mut machine = machine_builder.build();
+            .syscall(Box::new(machine_syscall))
+            .build();
 
         machine
             .load_program(&self.script_elf, machine_args.into_iter())
             .unwrap();
-
-        // Force SP to the top of the 4 MB buffer so the stack grows
-        // downward into free space and cannot overwrite code loaded at
-        // the low end of memory.
-        machine.set_register(ckb_vm::registers::SP, ckb_vm::RISCV_MAX_MEMORY as u64);
 
         machine.run().expect("CKB-VM execution failed");
     }

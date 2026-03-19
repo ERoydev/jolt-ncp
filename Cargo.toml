@@ -12,7 +12,9 @@ codegen-units = 1
 lto = "fat"
 
 [dependencies]
-jolt-sdk = { git = "https://github.com/a16z/jolt", features = ["host"] }
+jolt-sdk = { git = "https://github.com/ERoydev/jolt", branch = "fork/jolt-rev", features = [
+    "host",
+] }
 guest = { path = "./guest" }
 tracing = "0.1"
 tracing-subscriber = "0.3"
@@ -33,6 +35,7 @@ ckb-mock-tx-types = "1.0.0"
 ckb-chain-spec = "1.0.2"
 ckb-hash = "1.0.1"
 ckb-vm = "0.24.14"
+ckb-vm-fuzzing-utils = "1.0.0"
 
 [patch.crates-io]
 ark-ff = { git = "https://github.com/a16z/arkworks-algebra", branch = "dev/twist-shout" }
@@ -41,4 +44,13 @@ jolt-optimizations = { git = "https://github.com/a16z/arkworks-algebra", branch 
 ark-serialize = { git = "https://github.com/a16z/arkworks-algebra", branch = "dev/twist-shout" }
 ark-bn254 = { git = "https://github.com/a16z/arkworks-algebra", branch = "dev/twist-shout" }
 allocative = { git = "https://github.com/facebookexperimental/allocative", rev = "85b773d85d526d068ce94724ff7a7b81203fc95e" }
-ckb-vm = { git = "https://github.com/LimeChain/ckb-vm", branch="asm_feature_v0.24.14"}
+
+
+# TODO: CKB Forks
+ckb-vm = { git = "https://github.com/LimeChain/ckb-vm", branch = "asm_feature_v0.24.14" }
+protobuf-ckb-syscalls = { git = "https://github.com/LimeChain/ckb-vm-contrib", branch = "fix/libc" }
+ckb-vm-fuzzing-utils = { git = "https://github.com/LimeChain/ckb-vm-contrib", branch = "fix/libc" }
+
+# Forked zeroos with added support for ppoll syscall, since it's not create-io package i must override it as a git dependency
+[patch."https://github.com/LayerZero-Labs/ZeroOS.git"]
+zeroos = { git = "https://github.com/ERoydev/ZeroOS", branch = "fix/syscall_handler_v2" }

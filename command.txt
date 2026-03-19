@@ -1,6 +1,14 @@
 # Set required environment variables for cross-compilation
+# The guest has C dependencies - Crates like `ckb-vm`, `blake2b-rs`, etc. include C code that must be cross-compiled to RISC-V
+# Jolt's target is riscv64imac-zero-linux-musl — a custom musl-based target that requires a specific toolchain.
+# I need them as long as i have a C dependencies in my guest.
+
+# The CC_<target> - The `cc` crate convention for specifying the C compiler for a specific Rust target
+# The target triple with replaced with the Jolts custom target
 export CC_riscv64imac_zero_linux_musl="$HOME/.zeroos/musl/bin/riscv64-linux-musl-gcc"
 export CFLAGS_riscv64imac_zero_linux_musl="-mcmodel=medany -mabi=lp64 -march=rv64imac"
+# These tell "When compiling C code for `riscv64imac_zero_linux_musl`, use this GCC binary.
+CFLAGS_<target> — C compiler flags for a specific target
 
 cargo run --release -- --tx-hash 0x6e1bc6ddf551d927b44f345ee3dcd3b7a126d02f4eb88100f008595f850801a4 --network testnet
 
@@ -11,3 +19,12 @@ CC_riscv64imac_zero_linux_musl="$HOME/.zeroos/musl/bin/riscv64-linux-musl-gcc" c
 CC_riscv64imac_zero_linux_musl="$HOME/.zeroos/musl/bin/riscv64-linux-musl-gcc" CFLAGS_riscv64imac_zero_linux_musl="-mcmodel=medany -mabi=lp64 -march=rv64imac" cargo run --release -- --tx-hash 0x8e303e5bb591a69307f292a605e8780156c41eff978c200c307cde12f043c2d4 --network mainnet 2>&1
 
 
+# Get demangle
+```bash
+riscv64-unknown-elf-objdump -d guest > ../../../../../demangled.txt 
+```
+
+# Run with 2 rayon threads
+```bash
+RUST_BACKTRACE=full RAYON_NUM_THREADS=2 cargo run --release -- --tx-hash 0x8e303e5bb591a69307f292a605e8780156c41eff978c200c307cde12f043c2d4 --network mainnet                               
+```
