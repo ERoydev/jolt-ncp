@@ -7,9 +7,9 @@ edition = "2021"
 members = ["guest"]
 
 [profile.release]
-debug = 1
+lto = "thin"
 codegen-units = 1
-lto = "fat"
+panic = "abort"
 
 [dependencies]
 jolt-sdk = { git = "https://github.com/ERoydev/jolt", branch = "fork/jolt-rev", features = [

@@ -1621,7 +1621,6 @@ dependencies = [
 name = "guest"
 version = "0.1.0"
 dependencies = [
- "bincode",
  "ckb-vm",
  "ckb-vm-fuzzing-utils",
  "jolt-sdk",

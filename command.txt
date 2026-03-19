@@ -26,5 +26,11 @@ riscv64-unknown-elf-objdump -d guest > ../../../../../demangled.txt
 
 # Run with 2 rayon threads
 ```bash
-RUST_BACKTRACE=full RAYON_NUM_THREADS=2 cargo run --release -- --tx-hash 0x8e303e5bb591a69307f292a605e8780156c41eff978c200c307cde12f043c2d4 --network mainnet                               
-```
+RUST_BACKTRACE=full RAYON_NUM_THREADS=2 cargo run --release -- --tx-hash 0x8e303e5bb591a69307f292a605e8780156c41eff978c200c307cde12f043c2d4 --network mainnet       
+
+RUST_BACKTRACE=full cargo run --release -- --tx-hash 0xbace65e02708d508fd74a0c72d9e299c72d03ad04bcd1a181e78a390f50c3d43 --network mainnet     
+```                                                                                                                                                                                              
+  
+
+
+START: 14:37
