@@ -2,7 +2,7 @@ use jolt::{end_cycle_tracking, start_cycle_tracking};
 use serde::{Deserialize, Serialize};
 mod exec_syscall_handler;
 mod executor;
-mod jolt_memory;
+use ckb_vm::Bytes;
 
 /// Transaction proof context sent from host
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -52,23 +52,16 @@ Parameters i have set:
     max_trace_length = 67_108_864, // 2^26
     stack_size = 65536
 )]
-fn entrypoint(tx_context: TransactionProofContext) {
+fn entrypoint(mut tx_context: TransactionProofContext) {
     // tx_context is automatically deserialized by Jolt using postcard
     start_cycle_tracking("ckb-vm replay");
 
-    // tx_context.vm_traces.iter().for_each(|trace| {
-    //     executor::VmExecutor::new(
-    //         &trace.machine_trace_data,
-    //         &tx_context.machine_program_elfs[trace.machine_program_elf_index as usize],
-    //         trace.script_version,
-    //     )
-    //     .execute()
-    // });
-
     let trace = &tx_context.vm_traces[0];
     executor::VmExecutor::new(
-        &trace.machine_trace_data,
-        &tx_context.machine_program_elfs[trace.machine_program_elf_index as usize],
+        Bytes::from(trace.machine_trace_data.clone()),
+        Bytes::from(std::mem::take(
+            &mut tx_context.machine_program_elfs[trace.machine_program_elf_index as usize],
+        )),
         trace.script_version,
     )
     .execute();
