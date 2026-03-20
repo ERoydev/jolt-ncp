@@ -1,9 +1,8 @@
-use std::u64;
-
 use crate::exec_syscall_handler::EXEC_OVERRIDE;
-use ckb_vm::{Bytes, CoreMachine, DefaultMachineBuilder, FlatMemory, SupportMachine};
+use ckb_vm::{Bytes, DefaultMachineBuilder, FlatMemory, SupportMachine};
 use ckb_vm_fuzzing_utils::SynchronousSyscalls;
 use protobuf_ckb_syscalls::ProtobufVmRunnerImpls;
+use std::u64;
 
 const ELF_MAGIC: [u8; 4] = [0x7F, 0x45, 0x4C, 0x46];
 

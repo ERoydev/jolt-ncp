@@ -836,7 +836,7 @@ dependencies = [
 [[package]]
 name = "ckb-vm-fuzzing-utils"
 version = "1.0.0"
-source = "git+https://github.com/LimeChain/ckb-vm-contrib?branch=fix%2Flibc#75d431499d40b3620e4399b9475a67df4f1ea16c"
+source = "git+https://github.com/LimeChain/ckb-vm-contrib?branch=protobuf-ckb-syscalls-fork#60003f7d04b8f24c158fa7d72e89c403b4593653"
 dependencies = [
  "ckb-std",
  "ckb-vm",
@@ -2903,7 +2903,7 @@ dependencies = [
 [[package]]
 name = "protobuf-ckb-syscalls"
 version = "1.0.0"
-source = "git+https://github.com/LimeChain/ckb-vm-contrib?branch=fix%2Flibc#75d431499d40b3620e4399b9475a67df4f1ea16c"
+source = "git+https://github.com/LimeChain/ckb-vm-contrib?branch=protobuf-ckb-syscalls-fork#60003f7d04b8f24c158fa7d72e89c403b4593653"
 dependencies = [
  "ckb-std",
  "ckb-vm",

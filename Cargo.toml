@@ -46,10 +46,18 @@ ark-bn254 = { git = "https://github.com/a16z/arkworks-algebra", branch = "dev/tw
 allocative = { git = "https://github.com/facebookexperimental/allocative", rev = "85b773d85d526d068ce94724ff7a7b81203fc95e" }
 
 
-# TODO: CKB Forks
-ckb-vm = { git = "https://github.com/LimeChain/ckb-vm", branch = "asm_feature_v0.24.14" }
-protobuf-ckb-syscalls = { git = "https://github.com/LimeChain/ckb-vm-contrib", branch = "fix/libc" }
-ckb-vm-fuzzing-utils = { git = "https://github.com/LimeChain/ckb-vm-contrib", branch = "fix/libc" }
+# Encapsulates the asm behind a feature
+ckb-vm = { git = "https://github.com/LimeChain/ckb-vm", branch = "asm_feature_v0.24.14" } # Using 0.24.14
+# ckb-vm = { git = "https://github.com/ERoydev/ckb-vm", branch = "feat/asm-vm" } # Using 0.24.0
+# ckb-vm = { git = "https://github.com/ERoydev/ckb-vm", branch = "feat/asm-vm-merged-0.24.14" }
+
+# Fixated on ckb-vm 0.24.14 
+protobuf-ckb-syscalls = { git = "https://github.com/LimeChain/ckb-vm-contrib", branch = "protobuf-ckb-syscalls-fork" }
+ckb-vm-fuzzing-utils = { git = "https://github.com/LimeChain/ckb-vm-contrib", branch = "protobuf-ckb-syscalls-fork" }
+
+# Fixated on ckb-vm 0.24.0
+# protobuf-ckb-syscalls = { git = "https://github.com/LimeChain/ckb-vm-contrib", branch = "fix/libc" }
+# ckb-vm-fuzzing-utils = { git = "https://github.com/LimeChain/ckb-vm-contrib", branch = "fix/libc" }
 
 # Forked zeroos with added support for ppoll syscall, since it's not create-io package i must override it as a git dependency
 [patch."https://github.com/LayerZero-Labs/ZeroOS.git"]
